@@ -1,0 +1,110 @@
+------------------------------------------------
+-- Schema_Design.sql
+-- Restaurant Chain Management System
+------------------------------------------------
+
+------------------------------------------------
+-- DROP TABLES (Safe Order)
+------------------------------------------------
+DROP TABLE PAYMENT CASCADE CONSTRAINTS;
+DROP TABLE ORDER_DETAILS CASCADE CONSTRAINTS;
+DROP TABLE ORDERS CASCADE CONSTRAINTS;
+DROP TABLE MENU_ITEM CASCADE CONSTRAINTS;
+DROP TABLE CUSTOMER CASCADE CONSTRAINTS;
+DROP TABLE WAITER CASCADE CONSTRAINTS;
+DROP TABLE CHEF CASCADE CONSTRAINTS;
+DROP TABLE SUPPLIER CASCADE CONSTRAINTS;
+DROP TABLE EMPLOYEE CASCADE CONSTRAINTS;
+DROP TABLE BRANCH CASCADE CONSTRAINTS;
+
+------------------------------------------------
+-- TABLE CREATION
+------------------------------------------------
+CREATE TABLE BRANCH (
+    Branch_ID NUMBER PRIMARY KEY,
+    Branch_Name VARCHAR2(50) NOT NULL,
+    Address VARCHAR2(100) NOT NULL,
+    Phone VARCHAR2(15) UNIQUE
+);
+
+CREATE TABLE EMPLOYEE (
+    Employee_ID NUMBER PRIMARY KEY,
+    Branch_ID NUMBER NOT NULL,
+    Employee_Name VARCHAR2(50) NOT NULL,
+    Position VARCHAR2(30),
+    Salary NUMBER(10,2) CHECK (Salary > 0),
+    Hire_Date DATE,
+    CONSTRAINT FK_EMP_BRANCH FOREIGN KEY (Branch_ID)
+    REFERENCES BRANCH(Branch_ID)
+);
+
+CREATE TABLE CHEF (
+    Chef_ID NUMBER PRIMARY KEY,
+    Employee_ID NUMBER UNIQUE,
+    Specialty VARCHAR2(50),
+    CONSTRAINT FK_CHEF_EMP FOREIGN KEY (Employee_ID)
+    REFERENCES EMPLOYEE(Employee_ID)
+);
+
+CREATE TABLE WAITER (
+    Waiter_ID NUMBER PRIMARY KEY,
+    Employee_ID NUMBER UNIQUE,
+    Shift VARCHAR2(20) CHECK (Shift IN ('Morning','Evening','Night')),
+    CONSTRAINT FK_WAITER_EMP FOREIGN KEY (Employee_ID)
+    REFERENCES EMPLOYEE(Employee_ID)
+);
+
+CREATE TABLE SUPPLIER (
+    Supplier_ID NUMBER PRIMARY KEY,
+    Branch_ID NUMBER NOT NULL,
+    Supplier_Name VARCHAR2(50) NOT NULL,
+    Phone VARCHAR2(15),
+    CONSTRAINT FK_SUPPLIER_BRANCH FOREIGN KEY (Branch_ID)
+    REFERENCES BRANCH(Branch_ID)
+);
+
+CREATE TABLE CUSTOMER (
+    Customer_ID NUMBER PRIMARY KEY,
+    Customer_Name VARCHAR2(50) NOT NULL,
+    Phone VARCHAR2(15) UNIQUE
+);
+
+CREATE TABLE MENU_ITEM (
+    Item_ID NUMBER PRIMARY KEY,
+    Item_Name VARCHAR2(50) NOT NULL,
+    Category VARCHAR2(30),
+    Price NUMBER(8,2) CHECK (Price > 0)
+);
+
+CREATE TABLE ORDERS (
+    Order_ID NUMBER PRIMARY KEY,
+    Customer_ID NUMBER NOT NULL,
+    Waiter_ID NUMBER NOT NULL,
+    Order_Date DATE,
+    Total_Amount NUMBER(10,2) CHECK (Total_Amount >= 0),
+    CONSTRAINT FK_ORDER_CUSTOMER FOREIGN KEY (Customer_ID)
+    REFERENCES CUSTOMER(Customer_ID),
+    CONSTRAINT FK_ORDER_WAITER FOREIGN KEY (Waiter_ID)
+    REFERENCES WAITER(Waiter_ID)
+);
+
+CREATE TABLE ORDER_DETAILS (
+    Order_Detail_ID NUMBER PRIMARY KEY,
+    Order_ID NUMBER NOT NULL,
+    Item_ID NUMBER NOT NULL,
+    Quantity NUMBER CHECK (Quantity > 0),
+    CONSTRAINT FK_DETAIL_ORDER FOREIGN KEY (Order_ID)
+    REFERENCES ORDERS(Order_ID),
+    CONSTRAINT FK_DETAIL_ITEM FOREIGN KEY (Item_ID)
+    REFERENCES MENU_ITEM(Item_ID)
+);
+
+CREATE TABLE PAYMENT (
+    Payment_ID NUMBER PRIMARY KEY,
+    Order_ID NUMBER UNIQUE,
+    Payment_Date DATE,
+    Amount NUMBER(10,2) CHECK (Amount > 0),
+    Payment_Method VARCHAR2(20) CHECK (Payment_Method IN ('Cash','Card','Online')),
+    CONSTRAINT FK_PAYMENT_ORDER FOREIGN KEY (Order_ID)
+    REFERENCES ORDERS(Order_ID)
+);
